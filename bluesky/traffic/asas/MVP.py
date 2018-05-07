@@ -116,6 +116,8 @@ def resolve(asas, traf):
     # Stores resolution vector
     asas.asase[ids] = asas.tas[ids] * np.sin(asas.trk[ids] / 180 * np.pi)
     asas.asasn[ids] = asas.tas[ids] * np.cos(asas.trk[ids] / 180 * np.pi)
+    #print('East {}'.format(asas.asase[0]))
+    #print('North {}'.format(asas.asasn[0]))
     # asaseval should be set to True now
     if not asas.asaseval:
         asas.asaseval = True
@@ -141,6 +143,8 @@ def resolve(asas, traf):
     # using the auto pilot vertical speed (traf.avs) using the code in line 106 (asasalttemp) when only
     # horizontal resolutions are allowed.
     asas.alt = asas.alt*(1-asas.swresohoriz) + traf.selalt*asas.swresohoriz
+
+    #print(asas.inconf)
 
 
 #======================= Modified Voltage Potential ===========================

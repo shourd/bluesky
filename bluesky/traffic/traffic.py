@@ -184,6 +184,7 @@ class Traffic(TrafficArrays):
     def create(self, n=1, actype="B744", acalt=None, acspd=None, dest=None,
                 aclat=None, aclon=None, achdg=None, acid=None):
         """ Create multiple random aircraft in a specified area """
+        bs.scr.getviewbounds()
         area = bs.scr.getviewbounds()
         if acid is None:
             idtmp = chr(randint(65, 90)) + chr(randint(65, 90)) + '{:>05}'
