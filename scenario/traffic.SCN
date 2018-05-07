@@ -1,0 +1,7 @@
+# this is a traffic file that can be called with different initial speeds
+00:00:00.00>CRE AC1,B744,52,4,%0,FL250,300
+00:00:00.00>CRE AC2,B744,52,5,%0,FL250,300
+00:00:00.00>CRE AC3,B744,52,6,%0,FL250,300
+00:00:00.00>CRE AC4,B744,52,7,%0,FL250,300
+00:00:00.00>FF 28
+#00:00:30.00>RESET
