@@ -6,3 +6,4 @@ pyopengl-accelerate
 msgpack
 zmq
 pygame
+PIL

@@ -1,27 +1,19 @@
-""" BlueSky plugin template. The text you put here will be visible
-    in BlueSky as the description of your plugin. """
-# Import the global bluesky objects. Uncomment the ones you need
-#import bluesky as bs
+"""
+This Plugin is created to generate ssd-resolution data using a variety of scenarios
+"""
+
 from bluesky import stack, sim, traf  #, settings, navdb, traf, sim, scr, tools
 from bluesky.tools.aero import kts
 from bluesky.traffic.asas import ASAS
 from bluesky.traffic.asas.SSD import initializeSSD, constructSSD
 import matplotlib.pyplot as plt
 import numpy as np
-#from skimage.measure import block_reduce # to resize image
 from PIL import Image, ImageChops
-from math import ceil, floor
-#from pathlib import Path
 from os import path, makedirs
 import shutil # to remove folder
 import itertools # calculates cartesian product
 
-
-#import torchvision.transforms as transform
-#from resizeimage import resizeimage
-
-### Initialization function of your plugin. Do not change the name of this
-### function, as it is the way BlueSky recognises this file as a plugin.
+### Do not change name of the following function:
 def init_plugin():
 
     # Addtional initilisation code
@@ -34,24 +26,15 @@ def init_plugin():
         # The type of this plugin. For now, only simulation plugins are possible.
         'plugin_type':     'sim',
 
-        # Update interval in seconds. By default, your plugin's update function(s)
-        # are called every timestep of the simulation. If your plugin needs less
-        # frequent updates provide an update interval.
+        # Update interval in seconds.
         'update_interval': 10,
 
-        # The update function is called after traffic is updated. Use this if you
-        # want to do things as a result of what happens in traffic. If you need to
-        # something before traffic is updated please use preupdate.
+        # The update function is called after traffic is updated.
         'update':          update,
 
-        # The preupdate function is called before traffic is updated. Use this
-        # function to provide settings that need to be used by traffic in the current
-        # timestep. Examples are ASAS, which can give autopilot commands to resolve
-        # a conflict.
+        # The preupdate function is called before traffic is updated.
         'preupdate':       preupdate,
 
-        # If your plugin has a state, you will probably need a reset function to
-        # clear the state in between simulations.
         'reset':         reset
         }
 
@@ -59,7 +42,7 @@ def init_plugin():
         # The command name for your function
         'RL': [
             # A short usage string. This will be printed if you type HELP <name> in the BlueSky console
-            'RL ON/OFF',
+            'Type RL ON to start generating data',
 
             # A list of the argument types your function accepts. For a description of this, see ...
             '[onoff]',
@@ -68,15 +51,12 @@ def init_plugin():
             myfun,
 
             # a longer help text of your function.
-            'This plugin enables Reinforcement Learning in ATC CD&R tasks.']
+            'This plugin generates SSD-resolution data to be used for supervised learning.']
     }
 
     # init_plugin() should always return these two dicts.
     return config, stackfunctions
 
-
-### Periodic update functions that are called by the simulation. You can replace
-### this by anything, so long as you communicate this in init_plugin
 
 ### Initialization function:
 def myfun(flag=True):
@@ -109,7 +89,7 @@ def update():
     # load scenario files at appropriate times with varying init conditions
     load_scenarios()
 
-    if not traf.asas.inconf.any(): # execute only when there is a conflict
+    if not traf.asas.inconf.any(): # stop execution when there are no conflicts
         return
 
     # construct SSD and save downsampled image to disk
@@ -120,7 +100,10 @@ def update():
 
 
 def load_scenarios():
-    ''' ALL SCENARIO SETTINGS '''
+    """
+    ALL SCENARIO SETTINGS
+
+    """
 
     scenario_duration   =   10  # [min]
     lookahead_time      =   180  # [sec]
@@ -130,7 +113,7 @@ def load_scenarios():
     angle_increments    =   5   # [deg]
 
     t_cpa_scenarios     =   [120, 240]  # range of t_cpa's
-    cpa_scenarios       =   [0, 1, 2, 3]  # range of cpa's
+    cpa_scenarios       =   [-3, -2, -1, 0, 1, 2, 3]  # range of cpa's
     angle_scenarios     =   np.arange(start_angle, stop_angle, angle_increments)
     total_scenarios     =   len(angle_scenarios) * len(t_cpa_scenarios) * len(cpa_scenarios)
 
@@ -292,11 +275,12 @@ def create_SSD():
 
 
 def save_resolution():
-    ''' SAVE RESOLUTION TO TXT FILE '''
+    """ SAVE RESOLUTION TO TXT FILE """
+
     # SETTINGS
     bucket = 5  # discretize output resolution to nearest x [deg]
 
-    # HDG
+    # Make resolution relative to current heading
     res_hdg = traf.asas.trk[0]
     delta_hdg = int(res_hdg - traf.hdg[0])                   # correct for current heading
     if delta_hdg < -180: delta_hdg = delta_hdg + 360
@@ -309,6 +293,9 @@ def save_resolution():
     res_spd = traf.asas.tas[0] / kts
     current_spd = traf.tas[0] / kts
     delta_spd = int(res_spd - current_spd)
+
+    # discretize to nearest 5 kts
+    delta_spd = bucket * np.round(delta_spd / bucket)
 
     # Save resolutions to txt file
     filename = 'output/resolutions_S{}.txt'.format(scenario_count)
