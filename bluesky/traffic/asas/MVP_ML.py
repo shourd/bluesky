@@ -6,8 +6,8 @@ Created on Tue Mar 03 16:50:19 2015
 Edit: Sjoerd van Rooijen
 """
 import numpy as np
-from bluesky.tools.aero import ft,fpm,kts
-from math import ceil
+# from bluesky.tools.aero import ft,fpm,kts
+# from math import ceil
 
 
 def start(asas):
@@ -73,6 +73,7 @@ def resolve(asas, traf):
 
     # The old speed vector, cartesian coordinates
     v = np.array([traf.gseast, traf.gsnorth, traf.vs])
+    hdg = (np.arctan2(v[0, 0], v[1, 0]) * 180 / np.pi) % 360
 
     # The new speed vector, cartesian coordinates
     newv = dv+v
@@ -114,12 +115,19 @@ def resolve(asas, traf):
     vscapped = np.maximum(asas.vsmin,np.minimum(asas.vsmax,newvs))
 
     # Now assign resolutions to variables in the ASAS class
+    # """ Addition: adding an extra margin of 20 degrees """
+    # hdg_margin = 0 # add x degrees to the resolution.
+    # if dv[0,0] < 0: # if resolution vector of first A/C is negative (ie. resolution towards the left)
+    #     newtrack[0] = newtrack[0] - hdg_margin
+    # else:
+    #     newtrack[0] = newtrack[0] + hdg_margin
 
-    hdg_margin = 20 # add x degrees to the resolution.
-    if dv[0,0] < 0: # if resolution vector of first A/C is negative (ie. resolution towards the left)
-        newtrack[0] = newtrack[0] - hdg_margin
-    else:
-        newtrack[0] = newtrack[0] + hdg_margin
+    """ Multiply heading resolution with a factor to adjust for increased timestep """
+    hdg_factor = 1.5 # times
+    hdg_margin = 10 # [deg]
+    hdg_delta = newtrack[0] - hdg
+    newtrack[0] = hdg + hdg_factor * hdg_delta # multiplying with factor
+    newtrack[0] = newtrack[0] + np.sign(hdg_delta) * hdg_margin # adding margin
 
     asas.trk = newtrack
     asas.tas = newgscapped
@@ -128,8 +136,7 @@ def resolve(asas, traf):
     # Stores resolution vector
     asas.asase[ids] = asas.tas[ids] * np.sin(asas.trk[ids] / 180 * np.pi)
     asas.asasn[ids] = asas.tas[ids] * np.cos(asas.trk[ids] / 180 * np.pi)
-    #print('East {}'.format(asas.asase[0]))
-    #print('North {}'.format(asas.asasn[0]))
+
     # asaseval should be set to True now
     if not asas.asaseval:
         asas.asaseval = True
@@ -170,8 +177,8 @@ def MVP(traf, asas, qdr, dist, tcpa, tLOS, id1, id2):
     qdr = np.radians(qdr)
 
     # Relative position vector between id1 and id2
-    drel = np.array([np.sin(qdr)*dist, \
-                     np.cos(qdr)*dist, \
+    drel = np.array([np.sin(qdr)*dist,
+                     np.cos(qdr)*dist,
                      traf.alt[id2]-traf.alt[id1]])
 
     # Write velocities as vectors and find relative velocity vector
@@ -228,7 +235,11 @@ def MVP(traf, asas, qdr, dist, tcpa, tLOS, id1, id2):
     # Compute the resolution velocity vector in the vertical direction
     # The direction of the vertical resolution is such that the aircraft with
     # higher climb/decent rate reduces their climb/decent rate
-    dv3 = np.where(abs(vrel[2])>0.0,  (iV/tsolV)*(-vrel[2]/abs(vrel[2])), (iV/tsolV))
+    if vrel[2] == 0:
+        dv3 = 0
+    else:
+        dv3 = np.where(abs(vrel[2])>0.0,  (iV/tsolV)*(-vrel[2]/abs(vrel[2])), (iV/tsolV)) # this lines sometimes gives division by zero errors
+
 
     # It is necessary to cap dv3 to prevent that a vertical conflict
     # is solved in 1 timestep, leading to a vertical separation that is too

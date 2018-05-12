@@ -87,6 +87,7 @@ def resolve(asas, traf):
             newtrack = (np.arctan2(newv[0,:],newv[1,:])*180/np.pi) % 360
             newgs    = traf.gs
             newvs    = traf.vs
+            print('in loop: {}'.format(newtrack))
         else: # SPD + HDG
             newtrack = (np.arctan2(newv[0,:],newv[1,:])*180/np.pi) %360
             newgs    = np.sqrt(newv[0,:]**2 + newv[1,:]**2)

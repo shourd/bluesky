@@ -1,5 +1,5 @@
 """
-This Plugin is created to generate ssd-resolution data using a variety of scenarios
+This Plugin is created to give a resolution advisory based on a neural network
 """
 
 from bluesky import stack, sim, traf  #, settings, navdb, traf, sim, scr, tools
@@ -12,6 +12,8 @@ from PIL import Image, ImageChops
 from os import path, makedirs
 import shutil # to remove folder
 import itertools # calculates cartesian product
+from keras.models import model_from_json
+
 
 ### Do not change name of the following function:
 def init_plugin():
@@ -21,7 +23,7 @@ def init_plugin():
     # Configuration parameters
     config = {
         # The name of your plugin
-        'plugin_name':      'RL',
+        'plugin_name':      'RL_with_reso',
 
         # The type of this plugin. For now, only simulation plugins are possible.
         'plugin_type':      'sim',
@@ -69,6 +71,10 @@ def myfun(flag=True):
         shutil.rmtree('output') # delete output folder
         makedirs('output')      # create new output folder
 
+    global NN_model
+    NN_model = load_model('first_model')
+    print('Model loaded')
+
     return True, 'The RL plugin is turned %s.' % ('on' if flag else 'off')
 
 
@@ -110,10 +116,10 @@ def load_scenarios():
 
     start_angle         =   40  # [deg]
     stop_angle          =   320 # [deg]
-    angle_increments    =   1   # [deg]
+    angle_increments    =   20   # [deg]
 
-    t_cpa_scenarios     =   [240, 300]  # range of t_cpa's
-    cpa_scenarios       =   [-3, -2, -1, 0, 1, 2, 3]  # range of cpa's
+    t_cpa_scenarios     =   [270]  # range of t_cpa's
+    cpa_scenarios       =   [-1.5, 1.5]  # range of cpa's
     angle_scenarios     =   np.arange(start_angle, stop_angle, angle_increments)
     total_scenarios     =   len(angle_scenarios) * len(t_cpa_scenarios) * len(cpa_scenarios)
 
@@ -148,7 +154,7 @@ def load_scenarios():
         stack.stack('SCEN SCENARIO {}'.format(scenario_count))
         stack.stack('ECHO CONFLICT ANGLE: {conflict_angle} deg, CPA: {CPA} nm, T_CPA: {tCPA} s'
                     .format(conflict_angle=conflict_angle, CPA=cpa, tCPA=t_cpa))
-        stack.stack('PCALL SJOERD {conflict_angle} {CPA} {tCPA}'
+        stack.stack('PCALL SJOERD_WITH_RESO {conflict_angle} {CPA} {tCPA}'
                     .format(conflict_angle=conflict_angle,CPA=cpa, tCPA=t_cpa))
 
         traf.asas.dtlookahead = lookahead_time  # set lookahead time of ASAS algorithm
@@ -251,7 +257,7 @@ def create_SSD():
 
         # Make all black pixels caused by rotation white
         ssd_image = ssd_image.convert("RGB")
-        imgdata = ssd_image.getdata()
+        imgdata = ssd_image.getdata() # obtain pixel data
 
         newData = []
         for pixel in imgdata:
@@ -272,6 +278,10 @@ def create_SSD():
     # save SSD to disk
     ssd_image_ds.save('output/SSD_S{scenario_count}_T{simtime}.png'
                       .format(scenario_count=scenario_count, simtime=int(sim.simt)))  # save file with S {scenario counter} T {sim time}
+
+    predict_resolution(ssd_image_ds, size)
+
+    """ TODO: Get ssd_image in the right format and input into: prediction = model.predict(image) then profit! """
 
 
 def save_resolution():
@@ -308,6 +318,26 @@ def save_resolution():
         text_file.write("{}; {}\n".format(delta_hdg, delta_spd))
 
 
+def predict_resolution(ssd_image, size):
+    """ This function predicts a resolution based on a downsampled SSD image """
+
+    imgdata = np.array(ssd_image)[:,:,1] # convert PIL object to array
+    imgdata = imgdata.reshape(1, size[0], size[1], 1) # reshape to 4 dimensions
+    probabilities = NN_model.predict(imgdata) # evaluate model
+    print(probabilities)
+
+    prediction = int(np.argmax(probabilities)) # obtain predicted value
+    certainty = int(round(probabilities[0][prediction], 2) * 100) # obtain probability of prediction
+
+    classes = ['Left','Right']
+
+    print('Advisory: {} with {}% certainty'.format(classes[prediction], certainty))
+
+    return prediction, certainty
+
+
+""" AUXILIARY FUNCTIONS """
+
 ### Trim images
 def trim(im):
     bg = Image.new(im.mode, im.size, im.getpixel((0,0)))
@@ -315,3 +345,24 @@ def trim(im):
     bbox = diff.getbbox()
     if bbox:
         return im.crop(bbox)
+
+def load_model(model_name):
+    """ Load JSON model from disk """
+    print("Start loading model.")
+    # t = time.time()
+    model_path = 'models/' + model_name
+    try:
+        json_file = open('{}.json'.format(model_path), 'r')
+    except FileNotFoundError:
+        print('Model not found')
+        return
+
+    loaded_model_json = json_file.read()
+    json_file.close()
+    loaded_model = model_from_json(loaded_model_json)
+    # load weights into new model
+    loaded_model.load_weights('{}.h5'.format(model_path))
+    # elapsed = round(time.time() - t, 2)
+    # print("Loaded model from disk. ({} sec)".format(elapsed))
+
+    return loaded_model
