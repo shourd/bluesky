@@ -1,10 +1,10 @@
-''' NAP performance library. '''
+''' OpenAP performance library. '''
 import os
 import json
 import numpy as np
 import pandas as pd
 from bluesky import settings
-settings.set_variable_defaults(perf_path_nap="data/performance/NAP")
+settings.set_variable_defaults(perf_path_openap="data/performance/OpenAP")
 
 LIFT_FIXWING = 1     # fixwing aircraft
 LIFT_ROTOR = 2       # rotor aircraft
@@ -13,11 +13,11 @@ ENG_TYPE_TF = 1         # turbofan, fixwing
 ENG_TYPE_TP = 2         # turboprop, fixwing
 ENG_TYPE_TS = 3         # turboshlft, rotor
 
-fixwing_aircraft_db = settings.perf_path_nap + "/fixwing/aircraft.json"
-fixwing_engine_db = settings.perf_path_nap + "/fixwing/engines.csv"
-fixwing_envelops_dir = settings.perf_path_nap + "/fixwing/envelop/"
+fixwing_aircraft_db = settings.perf_path_openap + "/fixwing/aircraft.json"
+fixwing_engine_db = settings.perf_path_openap + "/fixwing/engines.csv"
+fixwing_envelops_dir = settings.perf_path_openap + "/fixwing/wrap/"
 
-rotor_aircraft_db = settings.perf_path_nap + "/rotor/aircraft.json"
+rotor_aircraft_db = settings.perf_path_openap + "/rotor/aircraft.json"
 
 class Coefficient():
     def __init__(self):
@@ -94,15 +94,15 @@ class Coefficient():
 
                 limits_fixwing[mdl]['axmax'] = df.loc['to_acc_tof']['max']
 
-                limits_fixwing[mdl]['vsmax'] = max(df.loc['ic_vh_avg']['max'],
-                                           df.loc['cl_vh_avg_pre_cas']['max'],
-                                           df.loc['cl_vh_avg_cas_const']['max'],
-                                           df.loc['cl_vh_avg_mach_const']['max'])
+                limits_fixwing[mdl]['vsmax'] = max(df.loc['ic_vz_avg']['max'],
+                                           df.loc['cl_vz_avg_pre_cas']['max'],
+                                           df.loc['cl_vz_avg_cas_const']['max'],
+                                           df.loc['cl_vz_avg_mach_const']['max'])
 
-                limits_fixwing[mdl]['vsmin'] = min(df.loc['ic_vh_avg']['min'],
-                                           df.loc['de_vh_avg_after_cas']['min'],
-                                           df.loc['de_vh_avg_cas_const']['min'],
-                                           df.loc['de_vh_avg_mach_const']['min'])
+                limits_fixwing[mdl]['vsmin'] = min(df.loc['ic_vz_avg']['min'],
+                                           df.loc['de_vz_avg_after_cas']['min'],
+                                           df.loc['de_vz_avg_cas_const']['min'],
+                                           df.loc['de_vz_avg_mach_const']['min'])
 
                 # limits_fixwing['amaxverti'] = None # max vertical acceleration (m/s2)
         return limits_fixwing

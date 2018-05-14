@@ -5,7 +5,10 @@ import bluesky as bs
 from bluesky import settings, stack
 from bluesky.tools import datalog, areafilter, plugin, plotter
 from bluesky.tools.misc import txt2tim, tim2txt
-from bluesky.network import Node
+if settings.is_detached:
+    from bluesky.network.detached import Node
+else:
+    from bluesky.network.node import Node
 
 # Minimum sleep interval
 MINSLEEP = 1e-3
@@ -124,6 +127,8 @@ class Simulation(Node):
 
         # Close savefile which may be open for recording
         bs.stack.saveclose()  # Close reording file if it is on
+
+        self.quit()
 
     def op(self):
         self.syst = time.time()
