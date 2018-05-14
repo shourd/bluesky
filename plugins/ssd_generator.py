@@ -21,7 +21,7 @@ def init_plugin():
     # Configuration parameters
     config = {
         # The name of your plugin
-        'plugin_name':      'RL',
+        'plugin_name':      'ssd_generator',
 
         # The type of this plugin. For now, only simulation plugins are possible.
         'plugin_type':      'sim',
@@ -40,9 +40,9 @@ def init_plugin():
 
     stackfunctions = {
         # The command name for your function
-        'RL': [
+        'GEN': [
             # A short usage string. This will be printed if you type HELP <name> in the BlueSky console
-            'Type RL ON to start generating data',
+            'Type GEN ON to start generating data',
 
             # A list of the argument types your function accepts. For a description of this, see ...
             '[onoff]',
@@ -60,8 +60,8 @@ def init_plugin():
 
 ### Initialization function:
 def myfun(flag=True):
-    global RLflag
-    RLflag = flag # convert flag var to global var
+    global gen_flag
+    gen_flag = flag # convert flag var to global var
 
     if flag:                    # load scenario if plugin is turning on
         stack.stack('OP')       # start time
@@ -69,7 +69,7 @@ def myfun(flag=True):
         shutil.rmtree('output') # delete output folder
         makedirs('output')      # create new output folder
 
-    return True, 'The RL plugin is turned %s.' % ('on' if flag else 'off')
+    return True, 'The Generator plugin is turned %s.' % ('on' if flag else 'off')
 
 
 def reset():
@@ -78,12 +78,12 @@ def reset():
 
 def preupdate():
     pass
-    if 'RLflag' in globals() and RLflag:  # only execute if plugin is turned on
+    if 'gen_flag' in globals() and gen_flag:  # only execute if plugin is turned on
         pass
 
 
 def update():
-    if 'RLflag' not in globals() or RLflag == False: # only execute if plugin is turned on
+    if 'gen_flag' not in globals() or gen_flag == False: # only execute if plugin is turned on
         return
 
     # load scenario files at appropriate times with varying init conditions
