@@ -104,7 +104,8 @@ def load_scenarios():
     ALL SCENARIO SETTINGS
 
     """
-    # implement: show original heading delta, and after alterarion.
+    scenario_name       =   'scen_generator_NN'
+
     scenario_duration   =   10  # [min]
     lookahead_time      =   180  # [sec]
 
@@ -148,8 +149,8 @@ def load_scenarios():
         stack.stack('SCEN SCENARIO {}'.format(scenario_count))
         stack.stack('ECHO CONFLICT ANGLE: {conflict_angle} deg, CPA: {CPA} nm, T_CPA: {tCPA} s'
                     .format(conflict_angle=conflict_angle, CPA=cpa, tCPA=t_cpa))
-        stack.stack('PCALL SJOERD {conflict_angle} {CPA} {tCPA}'
-                    .format(conflict_angle=conflict_angle,CPA=cpa, tCPA=t_cpa))
+        stack.stack('PCALL {scenario_name} {conflict_angle} {CPA} {tCPA}'
+                    .format(scenario_name=scenario_name, conflict_angle=conflict_angle,CPA=cpa, tCPA=t_cpa))
 
         traf.asas.dtlookahead = lookahead_time  # set lookahead time of ASAS algorithm
 
@@ -161,7 +162,7 @@ def load_scenarios():
 def create_SSD():
     # SETTINGS
     rotate_flag = False  # rotate SSDs before saving?
-    show_SSD_flag = True
+    show_SSD_flag = False
     size = 120, 120  # determine SSD image dimensions for saving
 
 
@@ -174,14 +175,10 @@ def create_SSD():
 
     initializeSSD(asas, traf.ntraf)
 
-    # traf.asas.mar = 1.4
-
     for i in range(traf.ntraf):
         asas.inconf[i] = True
 
     constructSSD(asas, traf, "RS1")
-
-    # calculate_resolution(asas, Traffic, 'min')
 
     ''' VISUALIZING SSD'''
 
@@ -273,6 +270,10 @@ def create_SSD():
     ssd_image_ds.save('output/SSD_S{scenario_count}_T{simtime}.png'
                       .format(scenario_count=scenario_count, simtime=int(sim.simt)))  # save file with S {scenario counter} T {sim time}
 
+    global ssd_image_global
+    ssd_image_global = ssd_image_ds
+
+    print('SSD created and saved')
 
 def save_resolution():
     """ SAVE RESOLUTION TO TXT FILE """

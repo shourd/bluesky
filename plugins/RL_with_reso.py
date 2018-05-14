@@ -167,7 +167,7 @@ def load_scenarios():
 def create_SSD():
     # SETTINGS
     rotate_flag = False  # rotate SSDs before saving?
-    show_SSD_flag = True
+    show_SSD_flag = False
     size = 120, 120  # determine SSD image dimensions for saving
 
 
@@ -180,14 +180,10 @@ def create_SSD():
 
     initializeSSD(asas, traf.ntraf)
 
-    # traf.asas.mar = 1.4
-
     for i in range(traf.ntraf):
         asas.inconf[i] = True
 
     constructSSD(asas, traf, "RS1")
-
-    # calculate_resolution(asas, Traffic, 'min')
 
     ''' VISUALIZING SSD'''
 
@@ -215,7 +211,6 @@ def create_SSD():
     # PLOTS
     fig = plt.figure('SSD')
     plt.clf()
-    # plt.ion()
     plt.plot(x_SSD_outer, y_SSD_outer, color='gray')
     plt.plot(x_SSD_inner, y_SSD_inner, color='gray')
 
@@ -278,6 +273,8 @@ def create_SSD():
     # save SSD to disk
     ssd_image_ds.save('output/SSD_S{scenario_count}_T{simtime}.png'
                       .format(scenario_count=scenario_count, simtime=int(sim.simt)))  # save file with S {scenario counter} T {sim time}
+
+    print('SSD is created')
 
     predict_resolution(ssd_image_ds, size)
 

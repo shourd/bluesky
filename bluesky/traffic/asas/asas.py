@@ -30,6 +30,7 @@ from . import DoNothing
 from . import Eby
 from . import MVP
 from . import MVP_ML
+from . import neural_net
 from . import Swarm
 from . import SSD
 
@@ -42,7 +43,7 @@ class ASAS(TrafficArrays):
     CDmethods = {"STATEBASED": StateBasedCD}
 
     # Dictionary of CR methods
-    CRmethods = {"OFF": DoNothing, "MVP": MVP, "MVP_ML": MVP_ML, "EBY": Eby, "SWARM": Swarm}
+    CRmethods = {"OFF": DoNothing, "MVP": MVP, "MVP_ML": MVP_ML, "NEURAL_NET": neural_net, "EBY": Eby, "SWARM": Swarm}
     # If pyclipper is installed add it to CRmethods-dict
     if SSD.loaded_pyclipper():
         CRmethods["SSD"] = SSD

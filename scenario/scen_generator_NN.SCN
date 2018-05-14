@@ -1,0 +1,11 @@
+# Input 0 determines conflict angle, Input 1 determines CPA, Input 2 determines T_CPA
+0:00:00:00>FF 10 # this 10 second skip is built in to s
+0:00:10:00>CRE SJ001 B738 52 4 40 8000 300
+0:00:10:00>CRECONFS SJ002 B738 SJ001 %0 %1 %2
+0:00:10:00>SSD SJ001
+0:00:10:00>ASAS ON
+0:00:10:00>RESO NEURAL_NET
+0:00:10:00>RMETHV OFF
+0:00:10:00>RMETHH HDG
+0:00:10:00>RESOOFF SJ002
+# 0:00:10:00>FF
