@@ -12,6 +12,8 @@ from PIL import Image, ImageChops
 from os import path, makedirs
 import shutil # to remove folder
 import itertools # calculates cartesian product
+import ssd_container # to transfer SSDs between modules
+
 
 ### Do not change name of the following function:
 def init_plugin():
@@ -68,6 +70,8 @@ def myfun(flag=True):
         stack.stack('FF')       # Fast forward to first scenario iteration
         shutil.rmtree('output') # delete output folder
         makedirs('output')      # create new output folder
+
+    ssd_image = 1
 
     return True, 'The Generator plugin is turned %s.' % ('on' if flag else 'off')
 
@@ -270,8 +274,7 @@ def create_SSD():
     ssd_image_ds.save('output/SSD_S{scenario_count}_T{simtime}.png'
                       .format(scenario_count=scenario_count, simtime=int(sim.simt)))  # save file with S {scenario counter} T {sim time}
 
-    global ssd_image_global
-    ssd_image_global = ssd_image_ds
+    ssd_container.ssd_image = ssd_image_ds
 
     print('SSD created and saved')
 

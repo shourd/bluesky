@@ -15,9 +15,8 @@ Limitations:
 import numpy as np
 from keras.models import model_from_json
 import os
-# from bluesky.tools.aero import ft,fpm,kts
-# from math import ceil
-
+from PIL import Image
+import ssd_container
 
 def start(asas):
     print('Resolution algorithm start')
@@ -33,9 +32,17 @@ def resolve(asas, traf):
 
     # --------------
 
-    if 'ssd_image_global' not in globals():  # only execute if ssd is created
+    ssd_image = ssd_container.ssd_image
+    if ssd_image == 0:
         print('SSD not defined yet')
         return
+
+
+    # try:
+    #     ssd_image = Image.open('SSD.png')
+    # except FileNotFoundError:
+    #     print('SSD not defined yet')
+    #     return
 
     print('Resolve')
 
@@ -47,7 +54,7 @@ def resolve(asas, traf):
     asas.asasn        = np.zeros(traf.ntraf, dtype=np.float32)
     asas.asase        = np.zeros(traf.ntraf, dtype=np.float32)
 
-    prediction, certainty = predict_resolution(ssd_image_global)
+    prediction, certainty = predict_resolution(ssd_image)
 
     # The old speed vector, cartesian coordinates
     v = np.array([traf.gseast, traf.gsnorth, traf.vs])
@@ -106,6 +113,7 @@ def load_model(model_name='first_model'):
     """ Load JSON model from disk """
     print("Start loading model.")
     a = os.path.abspath(__file__)
+    print(a)
     model_path = 'models/' + model_name
     try:
         json_file = open('{}.json'.format(model_path), 'r')
